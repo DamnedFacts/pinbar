@@ -12,7 +12,7 @@ async function syncBookmarks() {
   }
 
   const allBookmarks = await fetchAllBookmarks(apiToken, tagsToSync);
-  await syncBookmarksToPinbarFolder(allBookmarks, tagsToSync);
+  await syncBookmarksToPinbarFolder(apiToken, allBookmarks, tagsToSync);
 }
 
 browser.runtime.onMessage.addListener(async (message) => {

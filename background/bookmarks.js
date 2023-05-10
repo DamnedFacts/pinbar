@@ -45,23 +45,44 @@ function isBookmarkWithTagSet(bookmark, tagSet) {
   return tagSet.every(tag => bookmarkTags.includes(tag));
 }
 
-export async function syncBookmarksToPinbarFolder(apiToken, tagsToSync, pinbarFolder) {
-  const bookmarkUrlToIdMap = new Map();
-
+export async function syncBookmarksToPinbarFolder(pinbarFolderId, tagsToSync, settings) {
   for (const tagSet of tagsToSync) {
-    const encodedTags = encodeURIComponent(tagSet);
-    const bookmarks = await fetchBookmarks(apiToken, encodedTags);
-    const subfolder = await createOrUpdateSubfolder(pinbarFolder.id, tagSet.replace(' ', '-'));
-
-    for (const bookmark of bookmarks) {
-      const existingBookmarkId = bookmarkUrlToIdMap.get(bookmark.href);
-      if (existingBookmarkId) {
-        await moveBookmark(existingBookmarkId, subfolder.id);
-      } else {
-        const createdBookmark = await createBookmark(subfolder.id, bookmark);
-        bookmarkUrlToIdMap.set(bookmark.href, createdBookmark.id);
-      }
-    }
+    const tagSetString = tagSet.join('-');
+    const subfolderId = await createOrUpdateSubfolder(pinbarFolderId, tagSetString);
+    await syncBookmarksForTagSet(subfolderId, tagSet, settings);
   }
+}
+
+async function syncBookmarksForTagSet(folderId, tagSet, settings) {
+  const fetchedBookmarks = await fetchBookmarks(tagSet, settings.apiToken);
+  const currentBookmarks = await getBookmarksInFolder(folderId);
+
+  const bookmarksToRemove = currentBookmarks.filter(
+    (bookmark) => !fetchedBookmarks.some((fetched) => fetched.url === bookmark.url)
+  );
+  const bookmarksToUpdate = currentBookmarks.filter((bookmark) =>
+    fetchedBookmarks.some((fetched) => fetched.url === bookmark.url)
+  );
+  const bookmarksToAdd = fetchedBookmarks.filter(
+    (fetched) => !currentBookmarks.some((bookmark) => bookmark.url === fetched.url)
+  );
+
+  await Promise.all(bookmarksToRemove.map((bookmark) => browser.bookmarks.remove(bookmark.id)));
+  await Promise.all(
+    bookmarksToUpdate.map((bookmark) =>
+      browser.bookmarks.update(bookmark.id, {
+        title: bookmark.title,
+      })
+    )
+  );
+  await Promise.all(
+    bookmarksToAdd.map((bookmark) =>
+      browser.bookmarks.create({
+        parentId: folderId,
+        title: bookmark.description,
+        url: bookmark.href,
+      })
+    )
+  );
 }
 
