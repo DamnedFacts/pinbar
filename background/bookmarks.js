@@ -45,7 +45,7 @@ function isBookmarkWithTagSet(bookmark, tagSet) {
   return tagSet.every(tag => bookmarkTags.includes(tag));
 }
 
-export async function syncBookmarksToPinbarFolder(pinbarFolderId, tagsToSync, settings) {
+export async function syncBookmarks(pinbarFolderId, tagsToSync, settings) {
   for (const tagSet of tagsToSync) {
     const tagSetString = tagSet.join('-');
     const subfolderId = await createOrUpdateSubfolder(pinbarFolderId, tagSetString);
