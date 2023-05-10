@@ -1,4 +1,4 @@
-import { getSettings } from './settings.js';
+import { loadSettings } from './settings.js';
 import { fetchAllBookmarks } from './pinboard.js';
 import { syncBookmarksToPinbarFolder  } from './bookmarks.js';
 
@@ -15,7 +15,7 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 (async () => {
-  const { apiToken, tagsToSync, updateInterval } = await getSettings();
+  const { apiToken, tagsToSync, updateInterval } = await loadSettings();
 
   if (apiToken && tagsToSync && updateInterval) {
     syncBookmarksToPinbarFolder();

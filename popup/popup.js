@@ -1,4 +1,4 @@
-import { saveSettings } from '../background/settings.js';
+import { loadSettings, saveSettings } from '../background/settings.js';
 
 
 // Save settings function
@@ -27,14 +27,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Save settings button
   const saveSettingsButton = document.getElementById('save-settings');
-  saveButton.addEventListener('click', async () => {
-    const settings = {
-      apiToken: apiTokenInput.value,
-      tagsToSync: tagsToSyncInput.value,
-      updateIntervalMinutes: parseInt(updateIntervalInput.value, 10),
-    };
-    await saveSettings(settings);
-    browser.runtime.sendMessage({ action: 'syncBookmarks' });
+  saveSettingsButton.addEventListener('click', async () => {
+      const apiToken = apiTokenInput.value.trim();
+      const tagsToSync = tagsToSyncInput.value.trim();
+      const updateIntervalMinutes = parseInt(updateIntervalInput.value.trim(), 10);
+
+      await saveSettings(apiToken, tagsToSync, updateIntervalMinutes);
+
+      // Trigger the sync after saving the settings
+      browser.runtime.sendMessage({ action: 'syncBookmarks' });
   });
 });
 
