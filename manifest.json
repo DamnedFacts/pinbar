@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "Pinbar",
+  "version": "1.0",
+  "description": "Sync selected Pinboard tags to Firefox bookmarks toolbar",
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+  "permissions": ["bookmarks", "alarms", "storage", "https://api.pinboard.in/"],
+  "browser_action": {
+    "default_icon": "icons/icon-48.png",
+    "default_popup": "popup/popup.html",
+    "default_title": "Pinbar settings"
+  },
+  "background": {
+    "page": "background.html", // Use background.page instead of background.scripts
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.pinboard.in/*"],
+      "js": ["content-scripts/content-script.js"]
+    }
+  ],
+  "applications": {
+    "gecko": {
+      "id": "pinbar@example.com" // Add a unique add-on ID here
+    }
+  }
+}
+

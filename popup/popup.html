@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>Pinbar Settings</h1>
+    <form id="settings-form">
+      <label for="api-token">Pinboard API Token:</label>
+      <input type="text" id="api-token" name="api-token" required />
+
+      <label for="tags-to-sync">Tags to Sync (comma-separated):</label>
+      <input type="text" id="tags-to-sync" name="tags-to-sync" required />
+
+      <label for="update-interval">Update Interval (minutes):</label>
+      <input type="number" id="update-interval" name="update-interval" min="1" required />
+
+      <!-- Add the button below the form -->
+      <button id="sync-now">Sync Now</button>
+
+      <button id="save-settings" type="submit">Save Settings</button>
+
+    </form>
+    <script src="popup.js"></script>
+  </body>
+</html>
+
