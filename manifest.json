@@ -14,7 +14,7 @@
   },
   "background": {
     "page": "background.html", // Use background.page instead of background.scripts
-    "persistent": false
+    "persistent": true
   },
   "content_scripts": [
     {

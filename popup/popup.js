@@ -1,4 +1,4 @@
-import { getSettings, saveSettings } from './settings.js';
+import { saveSettings } from '../background/settings.js';
 
 
 // Save settings function

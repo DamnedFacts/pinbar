@@ -1,16 +1,16 @@
 import { getSettings } from './settings.js';
 import { fetchAllBookmarks } from './pinboard.js';
-import { syncBookmarks  } from './bookmarks.js';
+import { syncBookmarksToPinbarFolder  } from './bookmarks.js';
 
 browser.runtime.onMessage.addListener(async (message) => {
   if (message.action === 'syncBookmarks') {
-    await syncBookmarks();
+    await syncBookmarksToPinbarFolder();
   }
 });
 
 browser.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'syncBookmarksAlarm') {
-    await syncBookmarks();
+    await syncBookmarksToPinbarFolder();
   }
 });
 
@@ -18,7 +18,7 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
   const { apiToken, tagsToSync, updateInterval } = await getSettings();
 
   if (apiToken && tagsToSync && updateInterval) {
-    syncBookmarks();
+    syncBookmarksToPinbarFolder();
 
     browser.alarms.create('syncBookmarksAlarm', {
       periodInMinutes: updateInterval,

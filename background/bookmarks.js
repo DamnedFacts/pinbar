@@ -45,44 +45,47 @@ function isBookmarkWithTagSet(bookmark, tagSet) {
   return tagSet.every(tag => bookmarkTags.includes(tag));
 }
 
-export async function syncBookmarks(pinbarFolderId, tagsToSync, settings) {
+async function syncBookmarksToSubfolder(pinbarFolderId, tagSet, bookmarks) {
+  const subfolderName = tagSet.replace(/\s+/g, '-');
+  const subfolderId = await createOrUpdateSubfolder(pinbarFolderId, subfolderName);
+  const bookmarksForTagSet = bookmarks.filter((bookmark) =>
+    tagSet.every((tag) => bookmark.tags.split(' ').includes(tag))
+  );
+
+  await addOrUpdateBookmarksInFolder(subfolderId, bookmarksForTagSet);
+}
+
+export async function syncBookmarksToPinbarFolder(pinbarFolderId, bookmarks, tagsToSync) {
   for (const tagSet of tagsToSync) {
     const tagSetString = tagSet.join('-');
-    const subfolderId = await createOrUpdateSubfolder(pinbarFolderId, tagSetString);
-    await syncBookmarksForTagSet(subfolderId, tagSet, settings);
+    const bookmarksToSync = bookmarks.filter((bookmark) => isBookmarkInTagSet(bookmark, tagSet));
+    await syncBookmarksToSubfolder(pinbarFolderId, bookmarksToSync, tagSetString);
   }
 }
 
-async function syncBookmarksForTagSet(folderId, tagSet, settings) {
-  const fetchedBookmarks = await fetchBookmarks(tagSet, settings.apiToken);
-  const currentBookmarks = await getBookmarksInFolder(folderId);
+async function addOrUpdateBookmarksInFolder(folderId, bookmarks) {
+  const existingBookmarks = await browser.bookmarks.getChildren(folderId);
 
-  const bookmarksToRemove = currentBookmarks.filter(
-    (bookmark) => !fetchedBookmarks.some((fetched) => fetched.url === bookmark.url)
-  );
-  const bookmarksToUpdate = currentBookmarks.filter((bookmark) =>
-    fetchedBookmarks.some((fetched) => fetched.url === bookmark.url)
-  );
-  const bookmarksToAdd = fetchedBookmarks.filter(
-    (fetched) => !currentBookmarks.some((bookmark) => bookmark.url === fetched.url)
-  );
-
-  await Promise.all(bookmarksToRemove.map((bookmark) => browser.bookmarks.remove(bookmark.id)));
-  await Promise.all(
-    bookmarksToUpdate.map((bookmark) =>
-      browser.bookmarks.update(bookmark.id, {
-        title: bookmark.title,
-      })
-    )
-  );
-  await Promise.all(
-    bookmarksToAdd.map((bookmark) =>
-      browser.bookmarks.create({
+  for (const bookmark of bookmarks) {
+    const existingBookmark = existingBookmarks.find((b) => b.url === bookmark.href);
+    if (existingBookmark) {
+      if (existingBookmark.title !== bookmark.description) {
+        await browser.bookmarks.update(existingBookmark.id, { title: bookmark.description });
+      }
+    } else {
+      await browser.bookmarks.create({
         parentId: folderId,
         title: bookmark.description,
         url: bookmark.href,
-      })
-    )
-  );
+      });
+    }
+  }
+
+  // Remove bookmarks that are no longer in the bookmarks list
+  for (const existingBookmark of existingBookmarks) {
+    if (!bookmarks.some((b) => b.href === existingBookmark.url)) {
+      await browser.bookmarks.remove(existingBookmark.id);
+    }
+  }
 }
 
